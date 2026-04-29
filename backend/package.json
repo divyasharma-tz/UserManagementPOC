@@ -1,7 +1,7 @@
 {
-  "name": "backend",
+  "name": "access-control-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "User Management System with RBAC Backend API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

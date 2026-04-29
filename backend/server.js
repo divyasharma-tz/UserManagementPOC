@@ -1,8 +1,10 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.js";
+import usersRoutes from "./routes/users.js";
+import rolesRoutes from "./routes/roles.js";
+import permissionsRoutes from "./routes/permissions.js";
 
 dotenv.config();
 
@@ -15,9 +17,11 @@ app.use(
   })
 );
 app.use(express.json());
-app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/users", usersRoutes);
+app.use("/api/roles", rolesRoutes);
+app.use("/api/permissions", permissionsRoutes);
 
 const PORT = process.env.PORT || 5000;
 
