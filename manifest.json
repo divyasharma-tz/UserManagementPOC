@@ -1,0 +1,150 @@
+{
+  "appId": "daylight.usermanager.v1",
+  "name": "User Manager",
+  "version": "1.0.0",
+  "manifestVersion": "1",
+  "semanticType": "schema:SoftwareApplication",
+  "healthEndpoint": "http://host.docker.internal:5000/api/health",
+  "healthIntervalSeconds": 30,
+  "baseUrl": "http://localhost:5000",
+  "domain": "usermanager",
+
+  "entities": [
+    {
+      "name": "User",
+      "baseType": "schema:Person",
+      "searchable": true,
+      "spaceElement": "usermanager.user.card",
+      "produces": ["User"],
+      "consumes": [],
+      "schema": {
+        "id": "string",
+        "name": "string",
+        "email": "string",
+        "roleKey": "string"
+      },
+      "expectedFields": []
+    },
+    {
+      "name": "Role",
+      "baseType": "schema:Role",
+      "searchable": false,
+      "produces": ["Role"],
+      "consumes": [],
+      "schema": { "key": "string", "label": "string" },
+      "expectedFields": []
+    },
+    {
+      "name": "Permission",
+      "baseType": "schema:Action",
+      "searchable": false,
+      "produces": ["Permission"],
+      "consumes": [],
+      "schema": { "key": "string", "label": "string", "category": "string" },
+      "expectedFields": []
+    }
+  ],
+
+  "intents": {
+    "handles": ["VERIFY_IDENTITY", "LOG_AUDIT", "REQUEST_APPROVAL"],
+    "emits": ["IDENTIFY_EMPLOYEE", "SEND_NOTIFICATION"]
+  },
+
+  "events": {
+    "publishes": [
+      "com.daylight.usermanager.user.created",
+      "com.daylight.usermanager.user.updated",
+      "com.daylight.usermanager.user.deleted",
+      "com.daylight.usermanager.role.assigned",
+      "com.daylight.usermanager.role.updated",
+      "com.daylight.usermanager.permission.granted",
+      "com.daylight.usermanager.permission.revoked"
+    ],
+    "subscribes": [
+      "com.daylight.messaging.notification.delivered"
+    ]
+  },
+
+  "actions": [
+    {
+      "id": "usermanager-verify-identity",
+      "endpoint": "/api/users/verify",
+      "agentReady": true,
+      "agentDescription": "Verify the identity of a user by checking their credentials and returning their profile with assigned roles",
+      "intent": "VERIFY_IDENTITY",
+      "triggers": [],
+      "parameters": [
+        { "name": "userId", "type": "string", "description": "Unique identifier of the user to verify", "required": true  },
+        { "name": "email",  "type": "string", "description": "Email address of the user to verify",    "required": false }
+      ]
+    },
+    {
+      "id": "usermanager-log-audit",
+      "endpoint": "/api/audit",
+      "agentReady": false,
+      "agentDescription": "Log an audit event for a user action",
+      "intent": "LOG_AUDIT",
+      "triggers": [],
+      "parameters": [
+        { "name": "userId", "type": "string", "description": "ID of the user who performed the action", "required": true },
+        { "name": "action", "type": "string", "description": "Description of the action performed",     "required": true }
+      ]
+    },
+    {
+      "id": "usermanager-request-approval",
+      "endpoint": "/api/approvals",
+      "agentReady": true,
+      "agentDescription": "Submit an approval request when a user requires a role change or elevated access that needs administrator review",
+      "intent": "REQUEST_APPROVAL",
+      "triggers": [],
+      "parameters": [
+        { "name": "userId",        "type": "string", "description": "ID of the user requesting the role change",          "required": true  },
+        { "name": "requestedRole", "type": "string", "description": "Role key being requested: viewer, editor, or admin", "required": true  },
+        { "name": "reason",        "type": "string", "description": "Business reason for the access request",             "required": false }
+      ]
+    }
+  ],
+
+  "space": {
+    "workflowContexts": ["usermanager.user", "usermanager.role"],
+    "widgets": [
+      {
+        "entityType":  "User",
+        "componentId": "usermanager-user-card",
+        "bundleUrl":   "/widgets/user-card.js",
+        "displayMode": "compact"
+      }
+    ]
+  },
+
+  "permissions": [
+    { "key": "users:read",   "label": "View Users",      "category": "Administration" },
+    { "key": "users:manage", "label": "Manage Users",    "category": "Administration" },
+    { "key": "roles:read",   "label": "View Roles",      "category": "Administration" },
+    { "key": "roles:manage", "label": "Manage Roles",    "category": "Administration" },
+    { "key": "audit:read",   "label": "View Audit Logs", "category": "Compliance"     }
+  ],
+
+  "roles": [
+    {
+      "key": "viewer",
+      "label": "Viewer",
+      "description": "Read-only access to user and role data",
+      "defaultPermissions": ["users:read", "roles:read"]
+    },
+    {
+      "key": "editor",
+      "label": "Editor",
+      "description": "Create and manage users and roles",
+      "defaultPermissions": ["users:read", "users:manage", "roles:read"]
+    },
+    {
+      "key": "admin",
+      "label": "Admin",
+      "description": "Full access including role management and audit logs",
+      "defaultPermissions": ["users:read", "users:manage", "roles:read", "roles:manage", "audit:read"]
+    }
+  ],
+
+  "defaultRole": "viewer"
+}
