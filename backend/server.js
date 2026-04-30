@@ -18,6 +18,10 @@ app.use(
 );
 app.use(express.json());
 
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", app: "daylight.usermanager.v1", timestamp: new Date().toISOString() });
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/roles", rolesRoutes);
