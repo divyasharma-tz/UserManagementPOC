@@ -23,24 +23,52 @@ axios.interceptors.request.use((config) => {
   return config;
 });
 
+const getCookieValue = (name) => {
+  const cookie = document.cookie
+    .split("; ")
+    .find((entry) => entry.startsWith(`${name}=`));
+
+  return cookie ? decodeURIComponent(cookie.split("=")[1]) : null;
+};
+
 function App() {
   const [user, setUser] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const exchangeSct = async (sct) => {
+      // Using dev endpoint that skips validation for testing
+      // Change to '/api/auth/sct-exchange' once real SCT is ready
+      const res = await axios.post("/api/auth/sct-exchange-dev", { sct });
+      localStorage.setItem("token", res.data.token);
+      setUser(res.data.user);
+      setError("");
+      return true;
+    };
+
     const fetchUser = async () => {
+      const sct = getCookieValue("sct_token");
       const token = localStorage.getItem("token");
-      if (!token) {
-        setLoading(false);
-        return;
-      }
+
       try {
+        if (sct) {
+          await exchangeSct(sct);
+          return;
+        }
+
+        if (!token) {
+          setUser(null);
+          return;
+        }
+
         const res = await axios.get("/api/auth/me");
         setUser(res.data);
+        setError("");
       } catch (err) {
         localStorage.removeItem("token");
         setUser(null);
+        setError(err.response?.data?.message || "Authentication failed");
       } finally {
         setLoading(false);
       }
