@@ -24,6 +24,11 @@ const Navbar = ({ user, setUser }) => {
               <Link to="/" className="mx-2 hover:text-blue-300">
                 Home
               </Link>
+              {user.permissions?.includes("contacts:read") && (
+                <Link to="/contacts" className="mx-2 hover:text-blue-300">
+                  Contacts
+                </Link>
+              )}
               {user.permissions?.includes("users:manage") && (
                 <>
                   <Link to="/users" className="mx-2 hover:text-blue-300">

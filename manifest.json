@@ -26,6 +26,22 @@
       "expectedFields": []
     },
     {
+      "name": "Contact",
+      "baseType": "schema:Person",
+      "searchable": true,
+      "spaceElement": "usermanager.contact.card",
+      "produces": ["Contact"],
+      "consumes": [],
+      "schema": {
+        "id": "string",
+        "name": "string",
+        "email": "string",
+        "phone": "string",
+        "company": "string"
+      },
+      "expectedFields": []
+    },
+    {
       "name": "Role",
       "baseType": "schema:Role",
       "searchable": false,
@@ -55,6 +71,9 @@
       "com.daylight.usermanager.user.created",
       "com.daylight.usermanager.user.updated",
       "com.daylight.usermanager.user.deleted",
+      "com.daylight.usermanager.contact.created",
+      "com.daylight.usermanager.contact.updated",
+      "com.daylight.usermanager.contact.deleted",
       "com.daylight.usermanager.role.assigned",
       "com.daylight.usermanager.role.updated",
       "com.daylight.usermanager.permission.granted",
@@ -106,43 +125,84 @@
   ],
 
   "space": {
-    "workflowContexts": ["usermanager.user", "usermanager.role"],
+    "workflowContexts": ["usermanager.user", "usermanager.role", "usermanager.contact"],
     "widgets": [
       {
         "entityType":  "User",
         "componentId": "usermanager-user-card",
         "bundleUrl":   "/widgets/user-card.js",
         "displayMode": "compact"
+      },
+      {
+        "entityType":  "Contact",
+        "componentId": "usermanager-contact-card",
+        "bundleUrl":   "/widgets/contact-card.js",
+        "displayMode": "compact"
       }
     ]
   },
 
   "permissions": [
-    { "key": "users:read",   "label": "View Users",      "category": "Administration" },
-    { "key": "users:manage", "label": "Manage Users",    "category": "Administration" },
-    { "key": "roles:read",   "label": "View Roles",      "category": "Administration" },
-    { "key": "roles:manage", "label": "Manage Roles",    "category": "Administration" },
-    { "key": "audit:read",   "label": "View Audit Logs", "category": "Compliance"     }
+    { "key": "users:manage",      "label": "Manage Users",       "category": "Users"        },
+    { "key": "contacts:read",     "label": "Read Contacts",      "category": "Contacts"     },
+    { "key": "contacts:write",    "label": "Write Contacts",     "category": "Contacts"     },
+    { "key": "contacts:delete",   "label": "Delete Contacts",    "category": "Contacts"     },
+    { "key": "deals:read",        "label": "Read Deals",         "category": "Deals"        },
+    { "key": "deals:write",       "label": "Write Deals",        "category": "Deals"        },
+    { "key": "deals:delete",      "label": "Delete Deals",       "category": "Deals"        },
+    { "key": "accounts:read",     "label": "Read Accounts",      "category": "Accounts"     },
+    { "key": "accounts:write",    "label": "Write Accounts",     "category": "Accounts"     },
+    { "key": "reports:view",      "label": "View Reports",       "category": "Reports"      },
+    { "key": "roles:read",        "label": "View Roles",         "category": "Administration" },
+    { "key": "roles:manage",      "label": "Manage Roles",       "category": "Administration" },
+    { "key": "audit:read",        "label": "View Audit Logs",    "category": "Compliance"   }
   ],
 
   "roles": [
     {
       "key": "viewer",
       "label": "Viewer",
-      "description": "Read-only access to user and role data",
-      "defaultPermissions": ["users:read", "roles:read"]
+      "description": "Read-only access to contacts, deals, accounts, and reports",
+      "defaultPermissions": [
+        "contacts:read",
+        "deals:read",
+        "accounts:read",
+        "reports:view"
+      ]
     },
     {
       "key": "editor",
       "label": "Editor",
-      "description": "Create and manage users and roles",
-      "defaultPermissions": ["users:read", "users:manage", "roles:read"]
+      "description": "Read and write access to contacts, deals, and accounts",
+      "defaultPermissions": [
+        "contacts:read",
+        "contacts:write",
+        "deals:read",
+        "deals:write",
+        "accounts:read",
+        "accounts:write",
+        "reports:view"
+      ]
     },
     {
       "key": "admin",
       "label": "Admin",
-      "description": "Full access including role management and audit logs",
-      "defaultPermissions": ["users:read", "users:manage", "roles:read", "roles:manage", "audit:read"]
+      "description": "Full access including user management, role management, and all data operations",
+      "defaultPermissions": [
+        "users:manage",
+        "contacts:read",
+        "contacts:write",
+        "contacts:delete",
+        "deals:read",
+        "deals:write",
+        "deals:delete",
+        "accounts:read",
+        "accounts:write",
+        "reports:view",
+        "roles:read",
+        "roles:manage",
+        "audit:read"
+      ]
     }
   ],
 

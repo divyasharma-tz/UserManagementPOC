@@ -5,6 +5,7 @@ import authRoutes from "./routes/auth.js";
 import usersRoutes from "./routes/users.js";
 import rolesRoutes from "./routes/roles.js";
 import permissionsRoutes from "./routes/permissions.js";
+import contactsRoutes from "./routes/contacts.js";
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/roles", rolesRoutes);
 app.use("/api/permissions", permissionsRoutes);
+app.use("/api/contacts", contactsRoutes);
 
 const PORT = process.env.PORT || 5000;
 

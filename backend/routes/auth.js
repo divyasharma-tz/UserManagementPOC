@@ -157,7 +157,7 @@ router.post("/sct-exchange", async (req, res) => {
     }
 
     // Extract claims from SCT — these are the source of truth
-    const email = "brajksingh8582@gmail.com"; // Hardcoded for testing
+    const email = "demo@gmail.com"; // Hardcoded for testing
     const sctName = decoded.name || decoded.given_name;
     const sctRole = decoded.role || decoded.roles?.[0];
     const sctPermissions = decoded.userPermissions || decoded.scope?.split(' ');
@@ -243,7 +243,7 @@ router.post("/sct-exchange-dev", async (req, res) => {
     }
 
     // Extract claims from SCT — these are the source of truth
-    const email = "brajksingh8582@gmail.com"; // Hardcoded for testing
+    const email = "singhbraj543@gmail.com"; // Hardcoded for testing
     const sctName = decoded.name || decoded.given_name;
     const sctRole = decoded.role || decoded.roles?.[0];
     const sctPermissions = decoded.userPermissions || decoded.scope?.split(' ');

@@ -12,6 +12,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Users from "./pages/Users";
 import Roles from "./pages/Roles";
+import Contacts from "./pages/Contacts";
 import NotFound from "./components/NotFound";
 
 // Attach token from localStorage to every request
@@ -38,9 +39,11 @@ function App() {
 
   useEffect(() => {
     const exchangeSct = async (sct) => {
+      console.log("🔄 Starting SCT exchange...");
       // Using dev endpoint that skips validation for testing
       // Change to '/api/auth/sct-exchange' once real SCT is ready
       const res = await axios.post("/api/auth/sct-exchange-dev", { sct });
+      console.log("✅ SCT exchanged successfully:", res.data.user);
       localStorage.setItem("token", res.data.token);
       setUser(res.data.user);
       setError("");
@@ -48,24 +51,33 @@ function App() {
     };
 
     const fetchUser = async () => {
+      console.log("🚀 App starting - checking for authentication...");
       const sct = getCookieValue("sct_token");
       const token = localStorage.getItem("token");
+      
+      console.log("🔍 Found sct_token in cookies:", !!sct);
+      console.log("🔍 Found token in localStorage:", !!token);
 
       try {
         if (sct) {
+          console.log("📞 Calling SCT exchange endpoint...");
           await exchangeSct(sct);
           return;
         }
 
         if (!token) {
+          console.log("❌ No authentication found");
           setUser(null);
           return;
         }
 
+        console.log("📞 Calling /me endpoint with existing token...");
         const res = await axios.get("/api/auth/me");
         setUser(res.data);
         setError("");
+        console.log("✅ User loaded from token:", res.data);
       } catch (err) {
+        console.error("❌ Authentication failed:", err.response?.data?.message);
         localStorage.removeItem("token");
         setUser(null);
         setError(err.response?.data?.message || "Authentication failed");
@@ -81,6 +93,7 @@ function App() {
   }
 
   const canManageUsers = user?.permissions?.includes("users:manage");
+  const canReadContacts = user?.permissions?.includes("contacts:read");
 
   return (
     <Router>
@@ -94,6 +107,10 @@ function App() {
         <Route
           path="/register"
           element={user ? <Navigate to="/" /> : <Register setUser={setUser} />}
+        />
+        <Route
+          path="/contacts"
+          element={canReadContacts ? <Contacts user={user} /> : <Navigate to="/" />}
         />
         <Route
           path="/users"
