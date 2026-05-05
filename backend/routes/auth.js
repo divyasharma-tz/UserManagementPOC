@@ -157,12 +157,20 @@ router.post("/sct-exchange", async (req, res) => {
     }
 
     // Extract claims from SCT — these are the source of truth
-    const email = "demo@gmail.com"; // Hardcoded for testing
+    const email = decoded.email || decoded.sub || decoded.upn;
     const sctName = decoded.name || decoded.given_name;
     const sctRole = decoded.role || decoded.roles?.[0];
     const sctPermissions = decoded.userPermissions || decoded.scope?.split(' ');
-    console.error("SCT sctPermissions :", sctPermissions);
+    const userGuid = decoded.userId; // Daylight Core's global UUID for this user
+    
+    console.log("📧 Extracted email:", email);
+    console.log("👤 Extracted name:", sctName);
+    console.log("🎭 Extracted role:", sctRole);
+    console.log("🔑 Extracted permissions:", sctPermissions);
+    console.log("🆔 Extracted user_guid:", userGuid);
+    
     if (!email) {
+      console.error("❌ Email extraction failed! Decoded token:", JSON.stringify(decoded, null, 2));
       return res.status(400).json({ message: "SCT missing identity claim (email/sub/upn)" });
     }
 
@@ -179,6 +187,15 @@ router.post("/sct-exchange", async (req, res) => {
     }
 
     const userId = result.rows[0].id;
+
+    // Store user_guid if we have it and it's not already set
+    if (userGuid) {
+      await pool.query(
+        "UPDATE users SET user_guid = $1 WHERE id = $2 AND user_guid IS NULL",
+        [userGuid, userId]
+      );
+      console.log("✅ Stored user_guid for user ID", userId);
+    }
 
     // If SCT doesn't have name/role/permissions, fall back to DB
     let name, role, permissions;
@@ -243,12 +260,20 @@ router.post("/sct-exchange-dev", async (req, res) => {
     }
 
     // Extract claims from SCT — these are the source of truth
-    const email = "singhbraj543@gmail.com"; // Hardcoded for testing
+    const email = decoded.email || decoded.sub || decoded.upn;
     const sctName = decoded.name || decoded.given_name;
     const sctRole = decoded.role || decoded.roles?.[0];
     const sctPermissions = decoded.userPermissions || decoded.scope?.split(' ');
+    const userGuid = decoded.userId; // Daylight Core's global UUID for this user
+
+    console.log("📧 Extracted email:", email);
+    console.log("👤 Extracted name:", sctName);
+    console.log("🎭 Extracted role:", sctRole);
+    console.log("🔑 Extracted permissions:", sctPermissions);
+    console.log("🆔 Extracted user_guid:", userGuid);
 
     if (!email) {
+      console.error("❌ Email extraction failed! Decoded token:", JSON.stringify(decoded, null, 2));
       return res.status(400).json({ message: "SCT missing identity claim (email/sub/upn)" });
     }
 
@@ -265,6 +290,15 @@ router.post("/sct-exchange-dev", async (req, res) => {
     }
 
     const userId = result.rows[0].id;
+
+    // Store user_guid if we have it and it's not already set
+    if (userGuid) {
+      await pool.query(
+        "UPDATE users SET user_guid = $1 WHERE id = $2 AND user_guid IS NULL",
+        [userGuid, userId]
+      );
+      console.log("✅ Stored user_guid for user ID", userId);
+    }
 
     // If SCT doesn't have name/role/permissions, fall back to DB
     let name, role, permissions;

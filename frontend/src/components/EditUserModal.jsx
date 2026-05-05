@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import axios from "axios";
 
+// Helper to extract cookie value by name
+const getCookieValue = (name) => {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? match[2] : null;
+};
+
 const EditUserModal = ({ user, onClose, onUserUpdated }) => {
   const [formData, setFormData] = useState({
     name: user.name,
@@ -24,7 +30,16 @@ const EditUserModal = ({ user, onClose, onUserUpdated }) => {
     setError("");
 
     try {
-      await axios.put(`/api/users/${user.id}`, formData);
+      // Extract SCT token from cookie or localStorage for RBAC sync
+      const sctToken = getCookieValue('sct_token') || localStorage.getItem('sct_token');
+      
+      const headers = {};
+      if (sctToken) {
+        headers['X-SCT-Token'] = sctToken;
+        headers['Token'] = sctToken;
+      }
+
+      await axios.put(`/api/users/${user.id}`, formData, { headers });
       onUserUpdated();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to update user");

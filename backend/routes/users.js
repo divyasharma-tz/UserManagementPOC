@@ -2,6 +2,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import pool from "../config/db.js";
 import { protect, hasPermission } from "../middleware/auth.js";
+import { syncRoleToRBAC } from "../utils/rbacSync.js";
 
 const router = express.Router();
 
@@ -125,6 +126,35 @@ router.put("/:id", protect, hasPermission("users:manage"), async (req, res) => {
       "SELECT r.key FROM roles r JOIN users u ON u.role_id = r.id WHERE u.id = $1",
       [userId]
     );
+
+    // Sync role to external RBAC service if role was changed
+    if (roleKey) {
+      try {
+        // Get the target user's user_guid from database
+        const userGuidResult = await pool.query(
+          "SELECT user_guid FROM users WHERE id = $1",
+          [userId]
+        );
+        const targetUserGuid = userGuidResult.rows[0]?.user_guid;
+
+        // Extract SCT token from request headers (passed by frontend)
+        const sctToken = req.headers['x-sct-token'] || req.headers['token'];
+
+        if (!targetUserGuid) {
+          console.warn(`[RBAC Sync] User ${userId} has no user_guid yet. Skipping external sync. User needs to login via Daylight first.`);
+        } else if (!sctToken) {
+          console.warn('[RBAC Sync] No SCT token provided in headers. Skipping external sync.');
+        } else {
+          console.log(`[RBAC Sync] Syncing role for user ${userId} (guid: ${targetUserGuid}) to role: ${roleKey}`);
+          await syncRoleToRBAC(targetUserGuid, roleKey, sctToken);
+          console.log('[RBAC Sync] ✓ External role sync completed successfully');
+        }
+      } catch (syncError) {
+        // Log the error but don't fail the local update
+        console.error('[RBAC Sync] External sync failed:', syncError.message);
+        console.error('[RBAC Sync] Local user update succeeded, but external RBAC service was not updated');
+      }
+    }
 
     res.json({ ...updatedUser.rows[0], role: roleKey2.rows[0]?.key });
   } catch (error) {
